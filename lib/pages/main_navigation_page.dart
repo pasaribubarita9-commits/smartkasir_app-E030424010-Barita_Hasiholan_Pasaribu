@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'dashboard_page.dart';
+import 'profil_toko_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -26,12 +27,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         style: TextStyle(fontSize: 16),
       ),
     ),
-    const Center(
-      child: Text(
-        'Menu 4: Profil Toko & Pengaturan (Modul M12)',
-        style: TextStyle(fontSize: 16),
-      ),
-    ),
+    const ProfilTokoPage(),
   ];
 
   @override

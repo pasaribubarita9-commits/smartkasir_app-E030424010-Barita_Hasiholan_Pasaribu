@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/karyawan.dart';
 import '../helpers/database_helper.dart';
@@ -124,9 +125,12 @@ class _FormKaryawanPageState extends State<FormKaryawanPage> {
                 controller: _pinController,
                 obscureText: _isPinHidden,
                 keyboardType: TextInputType.number,
-                maxLength: 4,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
                 decoration: InputDecoration(
-                  labelText: 'PIN Kasir (4 Digit)',
+                  labelText: 'PIN Kasir (6 Digit)',
                   prefixIcon: const Icon(Icons.lock_outline),
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
@@ -141,15 +145,14 @@ class _FormKaryawanPageState extends State<FormKaryawanPage> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || !RegExp(r'^[0-9]{4}$').hasMatch(value)) {
-                    return 'PIN wajib terdiri dari tepat 4 angka!';
+                  if (value == null || !RegExp(r'^[0-9]{6}$').hasMatch(value)) {
+                    return 'PIN wajib terdiri dari tepat 6 angka!';
                   }
                   return null;
                 },
               ),
 
               const SizedBox(height: 16),
-
               DropdownButtonFormField<String>(
                 value: _peran,
                 decoration: const InputDecoration(
@@ -157,7 +160,7 @@ class _FormKaryawanPageState extends State<FormKaryawanPage> {
                   prefixIcon: Icon(Icons.badge_outlined),
                   border: OutlineInputBorder(),
                 ),
-                items: ['Kasir', 'Admin', 'Manajer']
+                items: ['Kasir', 'Admin', 'Manajer', 'Supervisor']
                     .map(
                       (peran) =>
                           DropdownMenuItem(value: peran, child: Text(peran)),

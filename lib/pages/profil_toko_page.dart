@@ -17,6 +17,7 @@ class _ProfilTokoPageState extends State<ProfilTokoPage> {
   final _alamatCtrl = TextEditingController();
   final _waCtrl = TextEditingController();
   final _footerCtrl = TextEditingController();
+  final _instagramCtrl = TextEditingController();
 
   String? _namaKasirAktif;
 
@@ -37,6 +38,7 @@ class _ProfilTokoPageState extends State<ProfilTokoPage> {
       _waCtrl.text = prefs.getString('kontak_wa') ?? '';
       _footerCtrl.text =
           prefs.getString('footer_struk') ?? 'Terima Kasih Atas Kunjungan Anda';
+      _instagramCtrl.text = prefs.getString('ig_toko') ?? '';
       _namaKasirAktif = prefs.getString('active_karyawan_nama');
     });
   }
@@ -50,6 +52,7 @@ class _ProfilTokoPageState extends State<ProfilTokoPage> {
     await prefs.setString('alamat_toko', _alamatCtrl.text.trim());
     await prefs.setString('kontak_wa', _waCtrl.text.trim());
     await prefs.setString('footer_struk', _footerCtrl.text.trim());
+    await prefs.setString('ig_toko', _instagramCtrl.text.trim());
 
     if (!mounted) return;
 
@@ -76,6 +79,7 @@ class _ProfilTokoPageState extends State<ProfilTokoPage> {
     _alamatCtrl.dispose();
     _waCtrl.dispose();
     _footerCtrl.dispose();
+    _instagramCtrl.dispose();
     super.dispose();
   }
 
@@ -134,6 +138,18 @@ class _ProfilTokoPageState extends State<ProfilTokoPage> {
                 decoration: const InputDecoration(
                   labelText: 'Nomor WhatsApp',
                   prefixIcon: Icon(Icons.phone),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _instagramCtrl,
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(
+                  labelText: 'Instagram Toko',
+                  hintText: '@namatoko',
+                  prefixIcon: Icon(Icons.camera_alt),
                   border: OutlineInputBorder(),
                 ),
               ),

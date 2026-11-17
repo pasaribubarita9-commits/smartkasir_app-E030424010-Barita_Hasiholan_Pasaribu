@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/karyawan.dart';
@@ -13,6 +14,43 @@ class KelolaKaryawanPage extends StatefulWidget {
 }
 
 class _KelolaKaryawanPageState extends State<KelolaKaryawanPage> {
+  // FUNGSI BARU UNTUK WARNA BADGE PERAN
+  Widget _buildRoleBadge(String peran) {
+    Color warnaLatar;
+    Color warnaTeks;
+
+    switch (peran) {
+      case 'Supervisor':
+        warnaLatar = Colors.purple.shade100;
+        warnaTeks = Colors.purple.shade900;
+        break;
+      case 'Admin':
+        warnaLatar = Colors.blue.shade100;
+        warnaTeks = Colors.blue.shade900;
+        break;
+      case 'Manajer':
+        warnaLatar = Colors.orange.shade100;
+        warnaTeks = Colors.orange.shade900;
+        break;
+      default:
+        warnaLatar = Colors.green.shade100;
+        warnaTeks = Colors.green.shade900;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: warnaLatar,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        peran,
+        style: TextStyle(color: warnaTeks, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  // KODE LAMA TETAP DIPERTAHANKAN
   List<Karyawan> _daftarKaryawan = [];
   int? _activeKasirId;
   bool _loading = true;
@@ -131,7 +169,7 @@ class _KelolaKaryawanPageState extends State<KelolaKaryawanPage> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Peran: ${karyawan.peran}'),
+                        _buildRoleBadge(karyawan.peran),
                         if (isAktif)
                           const Text(
                             'Sedang Bertugas',

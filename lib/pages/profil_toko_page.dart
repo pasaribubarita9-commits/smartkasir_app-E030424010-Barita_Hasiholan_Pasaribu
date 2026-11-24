@@ -1,8 +1,12 @@
+// Mengimpor antarmuka Flutter dan SharedPreferences
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Mengimpor halaman kelola karyawan untuk jalan pintas menu
 import 'kelola_karyawan_page.dart';
+import 'kelola_pelanggan_page.dart';
 
+// Halaman Pengaturan Profil Toko & Footer Struk Kasir
 class ProfilTokoPage extends StatefulWidget {
   const ProfilTokoPage({super.key});
 
@@ -11,15 +15,17 @@ class ProfilTokoPage extends StatefulWidget {
 }
 
 class _ProfilTokoPageState extends State<ProfilTokoPage> {
-  final _formKey = GlobalKey<FormState>();
+  // Controller formulir pengaturan identitas toko
+  final _namaTokoController = TextEditingController();
+  final _alamatController = TextEditingController();
+  final _noWaController = TextEditingController();
+  final _footerController = TextEditingController();
 
-  final _namaTokoCtrl = TextEditingController();
-  final _alamatCtrl = TextEditingController();
-  final _waCtrl = TextEditingController();
-  final _footerCtrl = TextEditingController();
-  final _instagramCtrl = TextEditingController();
+  // Status visual tombol simpan
+  bool _sedangMenyimpan = false;
 
-  String? _namaKasirAktif;
+  // Nama kasir aktif yang sedang bertugas
+  String _activeCashierName = 'Belum Ditentukan';
 
   @override
   void initState() {
@@ -27,177 +33,291 @@ class _ProfilTokoPageState extends State<ProfilTokoPage> {
     _muatProfilToko();
   }
 
+  @override
+  void dispose() {
+    _namaTokoController.dispose();
+    _alamatController.dispose();
+    _noWaController.dispose();
+    _footerController.dispose();
+    super.dispose();
+  }
+
+  // --- MEMBACA PENGATURAN TOKO DARI SHAREDPREFERENCES ---
   Future<void> _muatProfilToko() async {
     final prefs = await SharedPreferences.getInstance();
-
-    if (!mounted) return;
-
     setState(() {
-      _namaTokoCtrl.text = prefs.getString('nama_toko') ?? 'SmartKasir UMKM';
-      _alamatCtrl.text = prefs.getString('alamat_toko') ?? '';
-      _waCtrl.text = prefs.getString('kontak_wa') ?? '';
-      _footerCtrl.text =
-          prefs.getString('footer_struk') ?? 'Terima Kasih Atas Kunjungan Anda';
-      _instagramCtrl.text = prefs.getString('ig_toko') ?? '';
-      _namaKasirAktif = prefs.getString('active_karyawan_nama');
+      _namaTokoController.text =
+          prefs.getString('nama_toko') ?? 'SmartKasir Poliban';
+      _alamatController.text =
+          prefs.getString('alamat_toko') ??
+          'Jl. Brigjend H. Hasan Basry, Banjarmasin';
+      _noWaController.text = prefs.getString('no_wa') ?? '081234567890';
+      _footerController.text =
+          prefs.getString('footer_struk') ??
+          'Terima Kasih Atas Kunjungan Anda! '
+              'Barang yang sudah dibeli tidak dapat ditukar.';
+      _activeCashierName =
+          prefs.getString('active_cashier_name') ?? 'Belum Ditentukan';
     });
   }
 
+  // --- MENYIMPAN PENGATURAN TOKO KE SHAREDPREFERENCES ---
   Future<void> _simpanProfilToko() async {
-    if (!_formKey.currentState!.validate()) return;
+    setState(() => _sedangMenyimpan = true);
 
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('nama_toko', _namaTokoController.text.trim());
+    await prefs.setString('alamat_toko', _alamatController.text.trim());
+    await prefs.setString('no_wa', _noWaController.text.trim());
+    await prefs.setString('footer_struk', _footerController.text.trim());
 
-    await prefs.setString('nama_toko', _namaTokoCtrl.text.trim());
-    await prefs.setString('alamat_toko', _alamatCtrl.text.trim());
-    await prefs.setString('kontak_wa', _waCtrl.text.trim());
-    await prefs.setString('footer_struk', _footerCtrl.text.trim());
-    await prefs.setString('ig_toko', _instagramCtrl.text.trim());
+    setState(() => _sedangMenyimpan = false);
 
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profil toko berhasil disimpan!'),
-        backgroundColor: Colors.teal,
+      SnackBar(
+        content: const Text('Identitas toko berhasil diperbarui!'),
+        backgroundColor: Colors.green.shade700,
+        behavior: SnackBarBehavior.floating,
       ),
     );
-  }
-
-  Future<void> _bukaKelolaKaryawan() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const KelolaKaryawanPage()),
-    );
-
-    await _muatProfilToko();
-  }
-
-  @override
-  void dispose() {
-    _namaTokoCtrl.dispose();
-    _alamatCtrl.dispose();
-    _waCtrl.dispose();
-    _footerCtrl.dispose();
-    _instagramCtrl.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil Toko')),
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: const Text(
+          'Profil & Pengaturan Toko',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF1E3A8A),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(Icons.store, size: 65, color: Colors.teal),
-              const SizedBox(height: 20),
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // KARTU RINGKASAN KASIR BERTUGAS
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Color(0xFF1E3A8A),
+                    child: Icon(
+                      Icons.storefront,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'KASIR AKTIF SHIFT INI',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          _activeCashierName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const KelolaKaryawanPage(),
+                        ),
+                      );
+                      _muatProfilToko();
+                    },
+                    icon: const Icon(Icons.people_outline, size: 16),
+                    label: const Text('Kelola'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
 
-              TextFormField(
-                controller: _namaTokoCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Toko',
-                  prefixIcon: Icon(Icons.store),
-                  border: OutlineInputBorder(),
+            // MENU MANAJEMEN DATA PELANGGAN & MEMBER (MODUL M13)
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ListTile(
+                leading: const CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Color(0xFF0D9488),
+                  child: Icon(Icons.people_alt, color: Colors.white, size: 20),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Nama toko wajib diisi';
-                  }
-                  return null;
+                title: const Text(
+                  'Data Pelanggan & Lokasi GPS',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                subtitle: const Text(
+                  'Kelola member CRM dan navigasi rute pengantaran',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  color: Color(0xFF1E3A8A),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const KelolaPelangganPage(),
+                    ),
+                  );
                 },
               ),
+            ),
+            const SizedBox(height: 20),
 
-              const SizedBox(height: 16),
+            // FORM IDENTITAS USAHA (SHAREDPREFERENCES)
+            const Text(
+              'IDENTITAS USAHA & STRUK KASIR',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Color(0xFF1E3A8A),
+              ),
+            ),
+            const SizedBox(height: 12),
 
-              TextFormField(
-                controller: _alamatCtrl,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Alamat Toko',
-                  prefixIcon: Icon(Icons.location_on),
-                  border: OutlineInputBorder(),
+            // 1. NAMA TOKO
+            TextFormField(
+              controller: _namaTokoController,
+              decoration: InputDecoration(
+                labelText: 'Nama Toko / Usaha',
+                prefixIcon: const Icon(Icons.store),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Alamat toko wajib diisi';
-                  }
-                  return null;
-                },
+                filled: true,
+                fillColor: Colors.white,
               ),
+            ),
+            const SizedBox(height: 14),
 
-              const SizedBox(height: 16),
+            // 2. ALAMAT TOKO
+            TextFormField(
+              controller: _alamatController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: 'Alamat Toko',
+                prefixIcon: const Icon(Icons.location_on_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 14),
 
-              TextFormField(
-                controller: _waCtrl,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Nomor WhatsApp',
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(),
+            // 3. KONTAK WHATSAPP / TELEPON
+            TextFormField(
+              controller: _noWaController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: 'Nomor WhatsApp / Kontak Toko',
+                prefixIcon: const Icon(Icons.phone_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // 4. CATATAN KAKI STRUK (FOOTER RECEIPT)
+            TextFormField(
+              controller: _footerController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: 'Catatan Kaki Struk (Footer Nota)',
+                hintText: 'Contoh: Terima kasih atas kunjungan Anda!',
+                prefixIcon: const Icon(Icons.receipt_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // TOMBOL SIMPAN PENGATURAN
+            ElevatedButton.icon(
+              onPressed: _sedangMenyimpan ? null : _simpanProfilToko,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E3A8A),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _instagramCtrl,
-                keyboardType: TextInputType.text,
-                decoration: const InputDecoration(
-                  labelText: 'Instagram Toko',
-                  hintText: '@namatoko',
-                  prefixIcon: Icon(Icons.camera_alt),
-                  border: OutlineInputBorder(),
+              icon: _sedangMenyimpan
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.save),
+              label: Text(
+                _sedangMenyimpan
+                    ? 'Menyimpan Pengaturan...'
+                    : 'Simpan Profil Toko',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
                 ),
               ),
-
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _footerCtrl,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Footer Struk',
-                  prefixIcon: Icon(Icons.receipt_long),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.person, color: Colors.teal),
-                  title: const Text('Kasir Aktif'),
-                  subtitle: Text(_namaKasirAktif ?? 'Belum ada kasir aktif'),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              OutlinedButton.icon(
-                onPressed: _bukaKelolaKaryawan,
-                icon: const Icon(Icons.people),
-                label: const Text('Kelola Karyawan'),
-              ),
-
-              const SizedBox(height: 16),
-
-              ElevatedButton.icon(
-                onPressed: _simpanProfilToko,
-                icon: const Icon(Icons.save),
-                label: const Text('Simpan Profil'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.all(16),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
